@@ -88,6 +88,33 @@ const naturalLanguageToSQLFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    
+    if (!output) {
+      console.error("[naturalLanguageToSQLFlow] LLM prompt did not produce an output.");
+      return {
+        sqlQuery: "Error: LLM failed to generate a response.",
+        queryResult: "[]" 
+      };
+    }
+
+    let validatedQueryResult = output.queryResult;
+    try {
+      // Attempt to parse to check if it's valid JSON.
+      // The schema description for NaturalLanguageToSQLOutputSchema.queryResult
+      // already asks the LLM for a JSON string.
+      JSON.parse(validatedQueryResult);
+    } catch (e) {
+      // If parsing fails, queryResult was not a valid JSON string.
+      // This can happen if the LLM doesn't use the tool and instead writes
+      // a textual message in the queryResult field.
+      console.warn(`[naturalLanguageToSQLFlow] output.queryResult from LLM was not valid JSON. ` +
+                   `Content: "${validatedQueryResult}". Defaulting to '[]' to prevent downstream parsing errors.`);
+      validatedQueryResult = "[]"; 
+    }
+
+    return {
+        sqlQuery: output.sqlQuery,
+        queryResult: validatedQueryResult
+    };
   }
 );
