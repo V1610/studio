@@ -12,9 +12,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-// To implement actual database connections, you would import necessary drivers here.
-// For example, for SQL Server:
-// import sql from 'mssql';
+import * as sql from 'mssql'; // Import the mssql package
 // For SAP HANA (if handling here, though there's a dedicated HANA flow):
 // import hanaClient from '@sap/hana-client';
 
@@ -59,62 +57,39 @@ const executeSqlQuery = ai.defineTool(
       `Executing SQL query: ${input.sqlQuery} against database type: ${input.databaseType}`
     );
 
-    // TODO: Implement actual database query execution logic.
-    // This involves:
-    // 1. Reading database connection details (host, user, password, database)
-    //    securely, preferably from environment variables (e.g., process.env.DB_HOST).
-    //    Example .env variables:
-    //    SQLSERVER_HOST=...
-    //    SQLSERVER_USER=...
-    //    SQLSERVER_PASSWORD=...
-    //    SQLSERVER_DATABASE=...
-    //    HANA_HOST=...
-    //    HANA_USER=...
-    //    HANA_PASSWORD=...
-    //    HANA_DATABASE=...
-    // 2. Establishing a connection to the database based on input.databaseType.
-    // 3. Executing the input.sqlQuery.
-    // 4. Formatting the result as a JSON string.
-    // 5. Handling errors gracefully.
-    //
-    // You can use a database driver (like 'mssql' for SQL Server, '@sap/hana-client' for HANA)
-    // or an ORM (like Prisma, Sequelize).
-
     if (input.databaseType === 'SQL Server') {
-      // TODO: SQL Server specific logic using 'mssql' package
-      // Example structure:
-      // try {
-      //   const pool = await sql.connect({
-      //     server: process.env.SQLSERVER_HOST!,
-      //     user: process.env.SQLSERVER_USER!,
-      //     password: process.env.SQLSERVER_PASSWORD!,
-      //     database: process.env.SQLSERVER_DATABASE!,
-      //     options: {
-      //       encrypt: true, // Use this if you're on Azure
-      //       trustServerCertificate: true // Change to false for production with valid certs
-      //     }
-      //   });
-      //   const result = await pool.request().query(input.sqlQuery);
-      //   return JSON.stringify(result.recordset);
-      // } catch (err) {
-      //   console.error('SQL Server execution error:', err);
-      //   return JSON.stringify({ error: `Failed to execute SQL Server query: ${(err as Error).message}` });
-      // }
-      console.warn("SQL Server execution not implemented. Returning placeholder data.");
-      return JSON.stringify([
-        {column1: 'sql_server_value1', column2: 'sql_server_value2'},
-        {column1: 'sql_server_value3', column2: 'sql_server_value4'},
-      ]);
+      try {
+        const pool = await sql.connect({
+          server: process.env.SQLSERVER_HOST!,
+          user: process.env.SQLSERVER_USER!,
+          password: process.env.SQLSERVER_PASSWORD!,
+          database: process.env.SQLSERVER_DATABASE!,
+          port: process.env.SQLSERVER_PORT ? parseInt(process.env.SQLSERVER_PORT, 10) : 1433,
+          options: {
+            encrypt: process.env.SQLSERVER_ENCRYPT === 'true',
+            trustServerCertificate: process.env.SQLSERVER_TRUST_SERVER_CERTIFICATE === 'true'
+          }
+        });
+        const result = await pool.request().query(input.sqlQuery);
+        await pool.close();
+        return JSON.stringify(result.recordset);
+      } catch (err) {
+        console.error('SQL Server execution error:', err);
+        return JSON.stringify({ error: `Failed to execute SQL Server query: ${(err as Error).message}` });
+      }
     } else if (input.databaseType === 'SAP HANA') {
       // TODO: SAP HANA specific logic using '@sap/hana-client' package
       // Example structure:
       // try {
+      //   const hanaClient = require('@sap/hana-client'); // Ensure this is imported or required
       //   const conn = hanaClient.createConnection();
       //   await new Promise((resolve, reject) => conn.connect({
       //     host: process.env.HANA_HOST!,
-      //     port: process.env.HANA_PORT!, // e.g. 30015 for tenant DBs
+      //     port: process.env.HANA_PORT ? parseInt(process.env.HANA_PORT, 10) : 30015, // e.g. 30015 for tenant DBs
       //     uid: process.env.HANA_USER!,
       //     pwd: process.env.HANA_PASSWORD!,
+      //     encrypt: process.env.HANA_ENCRYPT === 'true',
+      //     sslValidateCertificate: process.env.HANA_SSLVALIDATECERTIFICATE !== 'false'
       //   }, (err) => err ? reject(err) : resolve(undefined)));
       //   const result = await new Promise((resolve, reject) => conn.exec(input.sqlQuery, (err, rows) => err ? reject(err) : resolve(rows)));
       //   conn.disconnect();
@@ -179,9 +154,17 @@ const naturalLanguageToSQLFlow = ai.defineFlow(
       // If parsing fails, queryResult was not a valid JSON string.
       // This can happen if the LLM doesn't use the tool and instead writes
       // a textual message in the queryResult field.
-      console.warn(`[naturalLanguageToSQLFlow] output.queryResult from LLM was not valid JSON. ` +
-                   `Content: "${validatedQueryResult}". Defaulting to '[]' to prevent downstream parsing errors.`);
-      validatedQueryResult = "[]"; 
+      // Or, the tool itself returned an error message that isn't JSON.
+      // If it's an error from the tool, it should already be JSON like {"error": "message"}.
+      // This catch is more for when the LLM bypasses the tool.
+      console.warn(`[naturalLanguageToSQLFlow] output.queryResult from LLM or tool was not valid JSON. ` +
+                   `Content: "${validatedQueryResult}". Defaulting to '[]' to prevent downstream parsing errors if it's not a structured error already.`);
+      
+      // Check if the string *looks* like our JSON error object, if so, preserve it.
+      // Otherwise, default to empty array.
+      if (!(validatedQueryResult && validatedQueryResult.trim().startsWith('{"error":'))) {
+         validatedQueryResult = "[]";
+      }
     }
 
     return {
@@ -190,3 +173,4 @@ const naturalLanguageToSQLFlow = ai.defineFlow(
     };
   }
 );
+
