@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -91,7 +92,7 @@ export default function Home() {
         </div>
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} DataChat Translator. All rights reserved.
+        © {new Date().getFullYear()} Quintech Softech LLP. All rights reserved.
       </footer>
     </>
   );
