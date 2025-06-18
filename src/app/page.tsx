@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image'; // Added import for next/image
 import { AppHeader } from '@/components/layout/app-header';
 import { QueryInputForm } from '@/components/data-chat/query-input-form';
 import { ResultsDisplay } from '@/components/data-chat/results-display';
@@ -91,8 +92,22 @@ export default function Home() {
           )}
         </div>
       </main>
-      <footer className="py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Quintech Softech LLP. All rights reserved.
+      <footer className="py-6 text-muted-foreground text-sm border-t mt-8">
+        <div className="container max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div>
+            © {new Date().getFullYear()} Quintech Softech LLP. All rights reserved.
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs">Integrates with:</span>
+            <Image
+              src="https://placehold.co/84x28.png"
+              alt="SAP Business One Logo"
+              width={84}
+              height={28}
+              data-ai-hint="SAP logo"
+            />
+          </div>
+        </div>
       </footer>
     </>
   );
