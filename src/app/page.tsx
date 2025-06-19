@@ -101,10 +101,10 @@ export default function Home() {
             <span className="text-xs">Integrates with:</span>
             <Image
               src="https://placehold.co/84x28.png"
-              alt="SAP Logo"
+              alt="SAP Business One Logo"
               width={84}
               height={28}
-              data-ai-hint="SAP logo"
+              data-ai-hint="SAP Business"
             />
           </div>
         </div>
