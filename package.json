@@ -1,11 +1,40 @@
 {
   "name": "nextn",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "A Next.js application with Genkit for AI-powered data querying and visualization, supporting SQL Server and SAP HANA.",
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git"
   },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME#readme",
+  "keywords": [
+    "nextjs",
+    "react",
+    "genkit",
+    "ai",
+    "sql",
+    "hana",
+    "data-visualization"
+  ],
+  "files": [
+    ".next/",
+    "public/",
+    "src/ai/flows/",
+    "src/components/",
+    "src/app/",
+    "src/lib/",
+    "src/hooks/",
+    "next.config.ts",
+    "tsconfig.json",
+    "apphosting.yaml",
+    "README.md"
+  ],
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
@@ -13,7 +42,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
